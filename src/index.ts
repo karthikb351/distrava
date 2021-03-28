@@ -1,28 +1,37 @@
-import type {HttpFunction} from '@google-cloud/functions-framework/build/src/functions';
-import { verifyKeyMiddleware } from "discord-interactions";
+import {
+  InteractionResponseType,
+  InteractionType,
+  verifyKeyMiddleware,
+} from 'discord-interactions';
 import * as express from 'express';
-
-const getAllUsers: HttpFunction = (req, res) => {
-  // TODO: Get users from a database
-  res.send(['Alice', 'Bob']);
-};
-
-const getUser: HttpFunction = (req, res) => {
-  // TODO: Get user details
-  res.send({name: 'Alice', location: 'LAX'});
-};
-
-const getDefault: HttpFunction = (req, res) => {
-  res.status(404).send('Bad URL');
-};
 
 // Create an Express object and routes (in order)
 const app = express();
-app.use(verifyKeyMiddleware('3aa4149e26f777c952202ba6b5673d52bef199b129bd6e273f012f9988280b8b'));
 
-app.use('/users/:id', getUser);
-app.use('/users/', getAllUsers);
-app.use(getDefault);
+app.post(
+  '/interactions',
+  verifyKeyMiddleware(
+    '3aa4149e26f777c952202ba6b5673d52bef199b129bd6e273f012f9988280b8b'
+  ),
+  (req, res) => {
+    const interaction = req.body;
+    if (
+      interaction &&
+      interaction.type === InteractionType.APPLICATION_COMMAND
+    ) {
+      res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: `You used: ${interaction.data.name}`,
+        },
+      });
+    } else {
+      res.send({
+        type: InteractionResponseType.PONG,
+      });
+    }
+  }
+);
 
 // Set our GCF handler to our Express app.
 exports.distrava = app;
