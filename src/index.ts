@@ -6,7 +6,7 @@ import {
 } from 'discord-interactions';
 import * as express from 'express';
 import { config } from './config';
-import { responseToInteraction } from './lib';
+import { postToWebhook, responseToInteraction } from './lib';
 
 const strava = require('strava-v3');
 
@@ -61,6 +61,10 @@ app.post(
           response = await handleLastActivityCommand(interaction);
           await responseToInteraction(interaction_token, response);
           break;
+        case 'subscribe_to_feed':
+        // Create a webhook on this discord channel
+        // Store webhook + athlete mapping in datastore
+        // return {ok}
         default:
           await responseToInteraction(interaction_token, "?");
 
@@ -163,6 +167,49 @@ app.get('/strava/redirect', async (req, res) => {
 
   res.send('All good! Your account is connected.');
 });
+
+
+app.get('/strava/webhook', async (req, res) => {
+  const data = req.query;
+  if (data['hub.mode'] === 'subscribe' && data['hub.verify_token'] === 'somerandomsecret') {
+    res.json({
+      "hub.challenge": data['hub.challenge']
+    })
+  }
+  res.status(500).send();
+});
+
+app.post('/strava/webhook', async (req, res) => {
+
+  const data = req.body;
+  res.send();
+  if (data.object_type === 'activity' && data.aspect_type === 'create') {
+    const athleteId = data.owner_id;
+    const activityId = data.object_id;
+    await postToWebhook({
+      username: "Distrava Update!",
+      embeds: [{
+        title: `New activity posted for athlete id: ${athleteId}!`,
+        url: `https://www.strava.com/activities/${activityId}`,
+      }]
+
+    })
+    // Lookup datastore via strava athlete ID
+    // Lookup which channel to post for that athlete
+    // Find all webhooks to post to for this athlete, and push them to pub/sub
+    // end
+  }
+
+
+
+
+})
+
+
+const onPublishedMessage = () => {
+
+}
+
 
 // Set our GCF handler to our Express app.
 exports.distrava = app;
