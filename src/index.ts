@@ -5,15 +5,18 @@ import {
   verifyKeyMiddleware,
 } from 'discord-interactions';
 import * as express from 'express';
-import {config} from './config';
+import { config } from './config';
+import { responseToInteraction } from './lib';
 
 const strava = require('strava-v3');
 
 
-strava.config({...config, access_token: ''});
+strava.config({
+  ...config.strava, access_token: ''
+});
 
 // Imports the Google Cloud client library
-const {Datastore} = require('@google-cloud/datastore');
+const { Datastore } = require('@google-cloud/datastore');
 
 // Create an Express object and routes (in order)
 const app = express();
@@ -23,6 +26,16 @@ const datastore = new Datastore();
 
 const kind = 'User';
 
+const getAckMessage = (ephemeral: boolean = false) => {
+  return {
+    type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+    data: {
+      content: `I'm trying :(`,
+      flags: ephemeral ? InteractionResponseFlags.EPHEMERAL : undefined
+    },
+  }
+}
+
 app.post(
   '/interactions',
   verifyKeyMiddleware(
@@ -31,21 +44,25 @@ app.post(
   async (req, res) => {
     const interaction = req.body;
     let response;
+
     if (
       interaction &&
       interaction.type === InteractionType.APPLICATION_COMMAND
     ) {
-      switch(interaction.data.name) {
+      const interaction_token = interaction.token;
+      switch (interaction.data.name) {
         case 'connect':
+          res.send(getAckMessage(true));
           response = await handleConnectCommand(interaction);
-          res.send(response);
+          await responseToInteraction(interaction_token, response);
           break;
         case 'get_last_activity':
+          res.send(getAckMessage(false));
           response = await handleLastActivityCommand(interaction);
-          res.send(response);
+          await responseToInteraction(interaction_token, response);
           break;
         default:
-          res.send("?");
+          await responseToInteraction(interaction_token, "?");
 
       }
     } else {
@@ -56,7 +73,7 @@ app.post(
   }
 );
 
-const handleLastActivityCommand = async(interaction: any) => {
+const handleLastActivityCommand = async (interaction: any) => {
 
   const userId = interaction.member.user.id;
   const dsKey = datastore.key([kind, userId]);
@@ -64,75 +81,65 @@ const handleLastActivityCommand = async(interaction: any) => {
 
   if (!user || !user.strava) {
     return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: `Whoops. You need to connect your strava account first. Use the /connect command.`,
-        flags: InteractionResponseFlags.EPHEMERAL
-      },
+      content: `Whoops. You need to connect your strava account first. Use the /connect command.`,
     };
   }
 
   const stravaClient = new strava.client(user.strava.access_token);
-  let data = await stravaClient.athlete.listActivities({before: 1624903273, per_page: 1});
+  const data = await stravaClient.athlete.listActivities({ before: Math.floor(new Date().getTime() / 1000), per_page: 1 });
   if (data && data.length != 1) {
     return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: `No recent activities to show :(`,
-        flags: InteractionResponseFlags.EPHEMERAL
-      },
+      content: `No recent activities to show :(`
     };
   }
-  const activity = data[0];
+  const activity = await stravaClient.activities.get({
+    id: data[0].id,
+    include_all_efforts: false,
+  });
+
   return {
-    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: {
-      content: `You have ${data.length} activities`,
-      embeds: [{
-        title: activity.name,
-        color: 12221789,
-        timestamp: activity.start_date_local,
-      }]
-    },
+    embeds: [{
+      title: activity.name,
+      description: activity.description,
+      url: `https://www.strava.com/activities/${activity.id}`,
+      color: 12221789,
+      timestamp: activity.start_date_local,
+    }]
   };
 
 }
 
 const handleConnectCommand = async (interaction: any) => {
 
-    const userId = interaction.member.user.id;
-    const dsKey = datastore.key([kind, userId]);
-    const user = {
-      key: dsKey,
-      data: {
-        username: interaction.member.user.username,
-      },
-    };
-    // Saves the entity
-    await datastore.save(user);
-    console.log(`Saved ${user.key.name}: ${user.data.username}`); 
-    return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: `Connect your strava account here: ${constructConnectURI(
-          userId
-        )}`,
-        flags: InteractionResponseFlags.EPHEMERAL
-      },
-    };
+  const userId = interaction.member.user.id;
+  const dsKey = datastore.key([kind, userId]);
+  const user = {
+    key: dsKey,
+    data: {
+      username: interaction.member.user.username,
+    },
+  };
+  // Saves the entity
+  await datastore.save(user);
+  console.log(`Saved ${user.key.name}: ${user.data.username}`);
+  return {
+    content: `Connect your strava account here: ${constructConnectURI(
+      userId
+    )}`,
+  };
 }
 
 const constructConnectURI = (discordUserId: string): string => {
   const state = {
     user_id: discordUserId,
   }
-  return `https://www.strava.com/oauth/authorize?client_id=${config.client_id}&response_type=code&redirect_uri=${config.redirect_uri}&approval_prompt=force&scope=read,activity:read&state=${JSON.stringify(state)}`
+  return `https://www.strava.com/oauth/authorize?client_id=${config.strava.client_id}&response_type=code&redirect_uri=${config.strava.redirect_uri}&approval_prompt=force&scope=read,activity:read&state=${JSON.stringify(state)}`
 }
 
 
 app.get('/strava/redirect', async (req, res) => {
   const code = (req.query.code as string) || '';
-  const state = JSON.parse((req.query.state as string)|| '{}');
+  const state = JSON.parse((req.query.state as string) || '{}');
 
 
   const dsKey = datastore.key([kind, state.user_id]);
@@ -145,12 +152,12 @@ app.get('/strava/redirect', async (req, res) => {
     refresh_token: string;
     access_token: string;
   } = await strava.oauth.getToken(code);
-  
+
 
   user.strava = {
-      refresh_token:  response.refresh_token,
-      access_token: response.access_token,
-    };
+    refresh_token: response.refresh_token,
+    access_token: response.access_token,
+  };
   // Saves the entity
   await datastore.save(user);
 

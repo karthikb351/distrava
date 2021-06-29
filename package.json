@@ -31,6 +31,7 @@
     "@google-cloud/functions-framework": "^1.7.1",
     "@types/express": "^4.17.11",
     "@types/node": "^14.11.2",
+    "axios": "^0.21.1",
     "concurrently": "^6.0.0",
     "discord-interactions": "^2.0.2",
     "express": "^4.17.1",
