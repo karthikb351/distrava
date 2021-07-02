@@ -16,6 +16,6 @@ FROM mcr.microsoft.com/vscode/devcontainers/typescript-node:0-${VARIANT}
 # RUN su node -c "npm install -g <your-package-list -here>"
 
 
-RUN cd /workspaces/ && mkdir config && touch /workspaces/config/key.json
-RUN printenv GCP_SA_KEY > /workspaces/config/key.json
+# RUN cd /workspaces/ && mkdir config && touch /workspaces/config/key.json
+# RUN printenv GCP_SA_KEY > /workspaces/config/key.json
 ENV GOOGLE_APPLICATION_CREDENTIALS=/workspaces/config/key.json
