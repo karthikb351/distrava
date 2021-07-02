@@ -1,11 +1,12 @@
 export const config = {
   strava: {
-    client_id: '67824',
-    client_secret: 'be0f15d944b636a8c3fedd4072badd61de6785d9',
+    client_id: process.env.STRAVA_CLIENT_ID,
+    client_secret: process.env.STRAVA_CLIENT_SECRET,
     redirect_uri:
       'https://karthikb351-distrava-gw7vqpxh9j44-8080.githubpreview.dev/strava/redirect',
   },
   discord: {
-    application_id: '825766150994001930',
+    application_id: process.env.DISCORD_APPLICATION_ID,
+    public_key: process.env.DISCORD_PUBLIC_KEY,
   },
 };

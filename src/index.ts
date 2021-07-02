@@ -7,6 +7,7 @@ import {
 const express = require('express');
 import {handleConnectCommand} from './commands/connect';
 import {handleLastActivityCommand} from './commands/get_last_activity';
+import {config} from './config';
 import {
   postToWebhook,
   responseToInteraction,
@@ -32,9 +33,7 @@ const getAckMessage = (ephemeral = false) => {
 
 app.post(
   '/interactions',
-  verifyKeyMiddleware(
-    '3aa4149e26f777c952202ba6b5673d52bef199b129bd6e273f012f9988280b8b'
-  ),
+  verifyKeyMiddleware(config.discord.public_key),
   async (req, res) => {
     const interaction = req.body;
     let response;
