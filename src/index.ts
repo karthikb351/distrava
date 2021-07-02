@@ -7,6 +7,7 @@ import {
 const express = require('express');
 import {handleConnectCommand} from './commands/connect';
 import {handleLastActivityCommand} from './commands/get_last_activity';
+import {handleSubscriptionCommand} from './commands/subscribe';
 import {config} from './config';
 import {
   postToWebhook,
@@ -54,10 +55,10 @@ app.post(
           response = await handleLastActivityCommand(interaction);
           await responseToInteraction(interaction_token, response);
           break;
-        case 'subscribe_to_feed':
-          // Create a webhook on this discord channel
-          // Store webhook + athlete mapping in datastore
-          // return {ok}
+        case 'subscribe':
+          res.send(getAckMessage(true));
+          response = await handleSubscriptionCommand(interaction);
+          await responseToInteraction(interaction_token, response);
           break;
         default:
           await responseToInteraction(interaction_token, '?');
@@ -148,6 +149,10 @@ app.post('/strava/webhook', async (req, res) => {
 });
 
 const onPublishedMessage = () => {};
+
+app.get('/', (req, res) => {
+  res.send("We're running!");
+});
 
 // Set our GCF handler to our Express app.
 exports.distrava = app;

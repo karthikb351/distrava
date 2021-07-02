@@ -19,8 +19,11 @@ To deploy the app on google cloud functions, run `npm run deploy`.
 - [x] Strava webhook endpoint
 - [x] Use a ORM for datastore operations
 - [x] Figure out how to query datastore by both discord user id and strava athlete id.
-- [ ] Add command to subscribe to channel
+- [x] Add command to subscribe to channel
+- [x] Create a datamodel for webhooks
+- [ ] Validate webhook URL by creating a message and immediately deleting it
 - [ ] Add command to unsubscribe to channel
-- [ ] Create a datamodel for webhooks
 - [ ] Embed map of activity (if available)
 - [ ] Add discord profile picture to user model
+- [ ] Setup envs and configs in Dockerfile
+- [ ] Abstract class for a "command", that has ack, exec, and response functions
