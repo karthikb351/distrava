@@ -22,7 +22,7 @@ To deploy the app on google cloud functions, run `npm run deploy`.
 - [x] Add command to subscribe to channel
 - [x] Create a datamodel for webhooks
 - [x] Validate webhook URL by creating a message and immediately deleting it
-- [ ] Figure out how to query by property which is a key
+- [x] Figure out how to query by property which is a key
 - [ ] Add command to unsubscribe to channel
 - [ ] Embed map of activity (if available)
 - [ ] Add discord profile picture to user model

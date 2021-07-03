@@ -125,21 +125,22 @@ app.post('/strava/webhook', async (req, res) => {
       const activity = await stravaClient.activities.get({id: activityId});
       try {
         // List of subscriptions for a given user
-        const subscriptions = [
-          await SubscriptionModel.findOne({user_id: user.entityKey}),
-        ];
+        const subscriptions = await SubscriptionModel.query()
+          .filter('user_id', user.entityKey)
+          .run();
         // Array to hold final webhooks data
         const webhooks = [];
+
         // Promise array for finding webhooks for a given subscription
-        const subscriptionPromises = [];
-        subscriptions.forEach(subscription => {
-          subscriptionPromises.push(
+        const webhookQueryPromises = [];
+        subscriptions.entities.forEach(subscription => {
+          webhookQueryPromises.push(
             WebhookModel.findOne({
               __key__: subscription.webhook_id,
             })
           );
         });
-        await Promise.all(subscriptionPromises).then(_arr =>
+        await Promise.all(webhookQueryPromises).then(_arr =>
           _arr.forEach(val => webhooks.push(val))
         );
 
