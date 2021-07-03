@@ -10,14 +10,17 @@ import {handleLastActivityCommand} from './commands/get_last_activity';
 import {handleSubscriptionCommand} from './commands/subscribe';
 import {config} from './config';
 import {
-  postToWebhook,
   responseToInteraction,
   strava,
   datastore,
   kind,
   gstore,
+  constructWebhookMessageForActivity,
+  postToWebhook,
 } from './lib';
+import {SubscriptionModel} from './models/subscription';
 import {UserModel} from './models/user';
+import {WebhookModel} from './models/webhook';
 
 // Create an Express object and routes (in order)
 const app = express();
@@ -105,13 +108,13 @@ app.get('/strava/webhook', async (req, res) => {
       'hub.challenge': data['hub.challenge'],
     });
   }
-  res.status(500).send();
+  res.status(500).send('Invalid verification');
 });
 
 app.post('/strava/webhook', async (req, res) => {
   const data = req.body;
   res.send();
-  if (data.object_type === 'activity' && data.aspect_type === 'create') {
+  if (data.object_type === 'activity' && data.aspect_type !== 'delete') {
     const athleteId = data.owner_id.toString();
     const activityId = data.object_id;
 
@@ -120,23 +123,66 @@ app.post('/strava/webhook', async (req, res) => {
       user = await UserModel.findOne({strava_athlete_id: athleteId});
       const stravaClient = new strava.client(user.strava_access_token);
       const activity = await stravaClient.activities.get({id: activityId});
-      await postToWebhook({
-        username: user.discord_username,
-        avatar_url: user.strava_athlete_profile_picture,
-        embeds: [
-          {
-            title: activity.name,
-            url: `https://www.strava.com/activities/${activity.id}`,
-            description: activity.description,
-            color: 12221789,
-            timestamp: activity.start_date_local,
-            author: {
-              name: user.discord_username,
-              icon_url: user.strava_athlete_profile_picture,
-            },
-          },
-        ],
-      });
+      try {
+        // List of subscriptions for a given user
+        const subscriptions = [
+          await SubscriptionModel.findOne({user_id: user.entityKey}),
+        ];
+        // Array to hold final webhooks data
+        const webhooks = [];
+        // Promise array for finding webhooks for a given subscription
+        const subscriptionPromises = [];
+        subscriptions.forEach(subscription => {
+          subscriptionPromises.push(
+            WebhookModel.findOne({
+              __key__: subscription.webhook_id,
+            })
+          );
+        });
+        await Promise.all(subscriptionPromises).then(_arr =>
+          _arr.forEach(val => webhooks.push(val))
+        );
+
+        const webhookPromises = [];
+        webhooks.forEach(webhook => {
+          try {
+            const webhookMessage = constructWebhookMessageForActivity(
+              user,
+              activity
+            );
+            webhookPromises.push(
+              postToWebhook(
+                webhook.discord_webhook_id,
+                webhook.discord_webhook_token,
+                webhookMessage
+              )
+            );
+          } catch (e) {
+            console.log(e);
+          }
+        });
+        await Promise.all(webhookPromises);
+      } catch (e) {
+        console.log(e);
+      }
+
+      // await postToWebhook({
+      //   username: user.discord_username,
+      //   avatar_url: user.strava_athlete_profile_picture,
+      //   embeds: [
+      //     {
+      //       title: activity.name,
+      //       url: `https://www.strava.com/activities/${activity.id}`,
+      //       description: activity.description,
+      //       color: 12221789,
+      //       timestamp: activity.start_date_local,
+      //       author: {
+      //         name: user.discord_username,
+      //         icon_url: user.strava_athlete_profile_picture,
+      //       },
+      //     },
+      //   ],
+      // });
       // Lookup datastore via strava athlete ID
       // Lookup which channel to post for that athlete
       // Find all webhooks to post to for this athlete, and push them to pub/sub

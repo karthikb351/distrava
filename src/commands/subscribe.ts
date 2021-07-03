@@ -1,4 +1,4 @@
-import {parseWebhookUrl} from '../lib';
+import {parseWebhookUrl, validateWebhook} from '../lib';
 import {SubscriptionModel} from '../models/subscription';
 import {UserModel} from '../models/user';
 import {WebhookModel} from '../models/webhook';
@@ -34,6 +34,15 @@ export const handleSubscriptionCommand = async (interaction: any) => {
       x => x.name === 'webhook_url'
     )[0]?.value;
     const _webhook = parseWebhookUrl(webhook_url);
+    const validated = await validateWebhook(
+      _webhook.webhook_id,
+      _webhook.webhook_token
+    );
+    if (!validated) {
+      return {
+        content: "That webhook URL looks incorrect. Are you sure that's right?",
+      };
+    }
     webhook = new WebhookModel({
       discord_channel_id: channelId,
       discord_guild_id: guildId,
@@ -60,7 +69,6 @@ export const handleSubscriptionCommand = async (interaction: any) => {
     user_id: user.entityKey,
   });
   await subscription.save();
-  console.log(subscription);
   return {
     content:
       'Subscription successful! Go create an activity and you should see it show up here!',

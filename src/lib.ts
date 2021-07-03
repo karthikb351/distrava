@@ -45,9 +45,59 @@ export const parseWebhookUrl = (webhook_url = '') => {
   };
 };
 
-export const postToWebhook = (response: any) => {
+export const postToWebhook = (
+  webhook_id: string,
+  webhook_token: string,
+  response: any
+) => {
   return axios.post(
-    'https://discord.com/api/webhooks/859485897539321898/NBSPsvTXjkOB_sDNOZoPET5tcHbrD216Z49T8Nou685GfhAoDqAgH_HhOcRYenU4GwtB',
+    `https://discord.com/api/webhooks/${webhook_id}/${webhook_token}`,
     response
   );
+};
+
+export const constructWebhookMessageForActivity = (
+  user: any,
+  activity: any
+) => {
+  return {
+    username: user.discord_username,
+    avatar_url: user.strava_athlete_profile_picture,
+    embeds: [
+      {
+        title: activity.name,
+        url: `https://www.strava.com/activities/${activity.id}`,
+        description: activity.description,
+        color: 12221789,
+        timestamp: activity.start_date_local,
+        author: {
+          name: user.discord_username,
+          icon_url: user.strava_athlete_profile_picture,
+        },
+      },
+    ],
+  };
+};
+//
+
+export const validateWebhook = async (
+  webhook_id: string,
+  webhook_token: string
+) => {
+  let validated;
+  try {
+    const response = {content: 'Testing if webhook works!'};
+    const messageResponse = await axios.post(
+      `https://discord.com/api/webhooks/${webhook_id}/${webhook_token}?wait=true`,
+      response
+    );
+    await axios.delete(
+      `https://discord.com/api/webhooks/${webhook_id}/${webhook_token}/messages/${messageResponse.data.id}`
+    );
+    validated = true;
+  } catch (e) {
+    console.log(e);
+    validated = false;
+  }
+  return validated;
 };
