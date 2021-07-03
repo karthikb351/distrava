@@ -107,6 +107,7 @@ app.get('/strava/webhook', async (req, res) => {
     res.json({
       'hub.challenge': data['hub.challenge'],
     });
+    return;
   }
   res.status(500).send('Invalid verification');
 });
@@ -158,6 +159,7 @@ app.post('/strava/webhook', async (req, res) => {
                 webhookMessage
               )
             );
+            // Push to pub/sub queue
           } catch (e) {
             console.log(e);
           }
@@ -166,24 +168,6 @@ app.post('/strava/webhook', async (req, res) => {
       } catch (e) {
         console.log(e);
       }
-
-      // await postToWebhook({
-      //   username: user.discord_username,
-      //   avatar_url: user.strava_athlete_profile_picture,
-      //   embeds: [
-      //     {
-      //       title: activity.name,
-      //       url: `https://www.strava.com/activities/${activity.id}`,
-      //       description: activity.description,
-      //       color: 12221789,
-      //       timestamp: activity.start_date_local,
-      //       author: {
-      //         name: user.discord_username,
-      //         icon_url: user.strava_athlete_profile_picture,
-      //       },
-      //     },
-      //   ],
-      // });
       // Lookup datastore via strava athlete ID
       // Lookup which channel to post for that athlete
       // Find all webhooks to post to for this athlete, and push them to pub/sub
@@ -195,7 +179,10 @@ app.post('/strava/webhook', async (req, res) => {
   }
 });
 
-const onPublishedMessage = () => {};
+// on receiving a message from our webhook pub/sub
+const onPublishedMessage = (message: any) => {
+  // await postToWebhook(message);
+};
 
 app.get('/', (req, res) => {
   res.send("We're running!");
