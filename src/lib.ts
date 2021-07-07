@@ -7,6 +7,8 @@ const {Datastore} = require('@google-cloud/datastore');
 
 const {Gstore} = require('gstore-node');
 
+const {PubSub} = require('@google-cloud/pubsub');
+
 export const strava = require('strava-v3');
 
 export const kind = 'User';
@@ -20,6 +22,16 @@ strava.config({
 export const datastore = new Datastore();
 
 export const gstore = new Gstore();
+
+export const pubSubClient = new PubSub();
+
+export const publishInteractionMessage = (interaction: any) => {
+  // Publishes the message as a string, e.g. "Hello, world!" or JSON.stringify(someObject)
+  const dataBuffer = Buffer.from(interaction);
+  return pubSubClient
+    .topic(config.google.interaction_topic)
+    .publish(dataBuffer);
+};
 
 gstore.connect(datastore);
 

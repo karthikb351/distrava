@@ -3,7 +3,7 @@ export const config = {
     client_id: process.env.STRAVA_CLIENT_ID,
     client_secret: process.env.STRAVA_CLIENT_SECRET,
     redirect_uri:
-      'https://karthikb351-distrava-v7qjv5p36pv5-8080.githubpreview.dev/strava/redirect',
+      'https://us-central1-distrava-318517.cloudfunctions.net/distrava/strava/redirect',
   },
   discord: {
     application_id: process.env.DISCORD_APPLICATION_ID,
@@ -12,5 +12,6 @@ export const config = {
   },
   google: {
     google_maps_static_api_key: process.env.GOOGLE_MAPS_STATIC_API_KEY,
+    interaction_topic: 'discord-incoming-interaction-bus',
   },
 };

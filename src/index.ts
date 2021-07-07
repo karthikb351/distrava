@@ -20,6 +20,7 @@ import {
   gstore,
   constructWebhookMessageForActivity,
   postToWebhook,
+  publishInteractionMessage,
 } from './lib';
 import {SubscriptionModel} from './models/subscription';
 import {UserModel} from './models/user';
@@ -53,9 +54,10 @@ app.post(
 
       switch (interaction.data.name) {
         case 'connect':
+          await publishInteractionMessage(interaction);
           res.send(getAckMessage(true));
-          response = await handleConnectCommand(interaction);
-          await responseToInteraction(interaction_token, response);
+          // response = await handleConnectCommand(interaction);
+          // await responseToInteraction(interaction_token, response);
           break;
         case 'get_last_activity':
           res.send(getAckMessage(false));
@@ -92,6 +94,18 @@ app.post(
     }
   }
 );
+
+app.post('/interaction-subscription', async (req, res) => {
+  const base64 = req.body.message.data;
+  console.log(req.body);
+  const decodedString = Buffer.from(base64, 'base64').toString();
+  const interaction = JSON.parse(decodedString);
+  console.log(interaction);
+  const interaction_token = interaction.token;
+  const response = await handleConnectCommand(interaction);
+  await responseToInteraction(interaction_token, response);
+  res.send('ok');
+});
 
 app.get('/strava/redirect', async (req, res) => {
   const code = (req.query.code as string) || '';
