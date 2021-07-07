@@ -11,7 +11,6 @@ import {handleRemoveSubscriptionCommand} from './commands/remove_subscription';
 import {handleSetupSubscriptionCommand} from './commands/setup_subscriptions';
 import {handleSubscriptionCommand} from './commands/subscribe';
 import {handleUnsubscribeCommand} from './commands/unsubscribe';
-import {commands} from './commands';
 import {config} from './config';
 import {
   responseToInteraction,
