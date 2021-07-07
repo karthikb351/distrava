@@ -8,6 +8,7 @@
     "watch": "concurrently \"tsc -w\" \"nodemon --watch ./build/ --exec npm run start\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "rm -rf build && npm run compile && gcloud functions deploy distrava --runtime nodejs14 --trigger-http --allow-unauthenticated --project distrava-318517",
+    "setup:commands": "node setup/commands.js",
     "lint": "gts lint",
     "clean": "gts clean",
     "compile": "tsc",
