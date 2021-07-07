@@ -56,6 +56,7 @@ app.post(
         case 'connect':
           await publishInteractionMessage(interaction);
           res.send(getAckMessage(true));
+
           // response = await handleConnectCommand(interaction);
           // await responseToInteraction(interaction_token, response);
           break;
