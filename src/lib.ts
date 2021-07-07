@@ -27,7 +27,7 @@ export const pubSubClient = new PubSub();
 
 export const publishInteractionMessage = (interaction: any) => {
   // Publishes the message as a string, e.g. "Hello, world!" or JSON.stringify(someObject)
-  const dataBuffer = Buffer.from(interaction);
+  const dataBuffer = Buffer.from(JSON.stringify(interaction));
   return pubSubClient
     .topic(config.google.interaction_topic)
     .publish(dataBuffer);
