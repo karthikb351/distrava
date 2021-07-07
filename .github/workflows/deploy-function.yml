@@ -11,7 +11,7 @@ jobs:
       - uses: google-github-actions/setup-gcloud@master
         with:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
-          project_id: distrava
+          project_id: distrava-318517
           export_default_credentials: true
       - id: Deploy
         uses: google-github-actions/deploy-cloud-functions@main
