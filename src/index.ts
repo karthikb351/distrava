@@ -52,38 +52,25 @@ app.post(
     ) {
       const interaction_token = interaction.token;
 
+      await publishInteractionMessage(interaction);
       switch (interaction.data.name) {
         case 'connect':
-          await publishInteractionMessage(interaction);
           res.send(getAckMessage(true));
-
-          // response = await handleConnectCommand(interaction);
-          // await responseToInteraction(interaction_token, response);
           break;
         case 'get_last_activity':
           res.send(getAckMessage(false));
-          response = await handleLastActivityCommand(interaction);
-          await responseToInteraction(interaction_token, response);
           break;
         case 'setup_subscriptions':
           res.send(getAckMessage(true));
-          response = await handleSetupSubscriptionCommand(interaction);
-          await responseToInteraction(interaction_token, response);
           break;
         case 'remove_subscriptions':
           res.send(getAckMessage(true));
-          response = await handleRemoveSubscriptionCommand(interaction);
-          await responseToInteraction(interaction_token, response);
           break;
         case 'subscribe':
           res.send(getAckMessage(true));
-          response = await handleSubscriptionCommand(interaction);
-          await responseToInteraction(interaction_token, response);
           break;
         case 'unsubscribe':
           res.send(getAckMessage(true));
-          response = await handleUnsubscribeCommand(interaction);
-          await responseToInteraction(interaction_token, response);
           break;
         default:
           await responseToInteraction(interaction_token, '?');
@@ -98,12 +85,32 @@ app.post(
 
 app.post('/interaction-subscription', async (req, res) => {
   const base64 = req.body.message.data;
-  console.log(req.body);
   const decodedString = Buffer.from(base64, 'base64').toString();
   const interaction = JSON.parse(decodedString);
-  console.log(interaction);
   const interaction_token = interaction.token;
-  const response = await handleConnectCommand(interaction);
+  let response;
+  switch (interaction.data.name) {
+    case 'connect':
+      response = await handleConnectCommand(interaction);
+      break;
+    case 'get_last_activity':
+      response = await handleLastActivityCommand(interaction);
+      break;
+    case 'setup_subscriptions':
+      response = await handleSetupSubscriptionCommand(interaction);
+      break;
+    case 'remove_subscriptions':
+      response = await handleRemoveSubscriptionCommand(interaction);
+      break;
+    case 'subscribe':
+      response = await handleSubscriptionCommand(interaction);
+      break;
+    case 'unsubscribe':
+      response = await handleUnsubscribeCommand(interaction);
+      break;
+    default:
+      await responseToInteraction(interaction_token, '?');
+  }
   await responseToInteraction(interaction_token, response);
   res.send('ok');
 });

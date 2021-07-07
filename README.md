@@ -34,3 +34,4 @@ To deploy the app on google cloud functions, run `npm run deploy`.
 - [ ] Setup envs and configs in Dockerfile
 - [ ] Deploy the app on Cloud Functions
 - [ ] Setup production App on Strava and Discord
+- [ ] Fix multiline logs on GCP Logger
