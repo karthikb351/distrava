@@ -37,6 +37,18 @@ client
     {
       name: 'subscribe',
       description: 'Auto-post your Strava activities to this channel',
+    },
+    guildId
+  )
+  .then(console.log)
+  .catch(console.error);
+
+client
+  .createCommand(
+    {
+      name: 'setup_subscriptions',
+      description:
+        'Setup a webhook to allow users to auto-post their Strava activities on this channel',
       options: [
         {
           type: 3,
@@ -50,7 +62,26 @@ client
   )
   .then(console.log)
   .catch(console.error);
-
+client
+  .createCommand(
+    {
+      name: 'remove_subscriptions',
+      description: 'Removes all subscriptions for this channel',
+    },
+    guildId
+  )
+  .then(console.log)
+  .catch(console.error);
+client
+  .createCommand(
+    {
+      name: 'unsubscribe',
+      description: 'Stop auto-posting your Strava activities to this channel',
+    },
+    guildId
+  )
+  .then(console.log)
+  .catch(console.error);
 // // will edit the details of a command.
 // client
 //   .editCommand(

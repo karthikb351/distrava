@@ -1,5 +1,6 @@
+import {DistravaCommand} from '.';
 import {config} from '../config';
-import {datastore, kind} from '../lib';
+import {hasPermission} from '../lib';
 import {UserModel} from '../models/user';
 
 const constructConnectURI = (discordUserId: string): string => {

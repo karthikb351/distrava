@@ -7,7 +7,11 @@ import {
 const express = require('express');
 import {handleConnectCommand} from './commands/connect';
 import {handleLastActivityCommand} from './commands/get_last_activity';
+import {handleRemoveSubscriptionCommand} from './commands/remove_subscription';
+import {handleSetupSubscriptionCommand} from './commands/setup_subscriptions';
 import {handleSubscriptionCommand} from './commands/subscribe';
+import {handleUnsubscribeCommand} from './commands/unsubscribe';
+import {commands} from './commands';
 import {config} from './config';
 import {
   responseToInteraction,
@@ -47,6 +51,7 @@ app.post(
       interaction.type === InteractionType.APPLICATION_COMMAND
     ) {
       const interaction_token = interaction.token;
+
       switch (interaction.data.name) {
         case 'connect':
           res.send(getAckMessage(true));
@@ -58,9 +63,24 @@ app.post(
           response = await handleLastActivityCommand(interaction);
           await responseToInteraction(interaction_token, response);
           break;
+        case 'setup_subscriptions':
+          res.send(getAckMessage(true));
+          response = await handleSetupSubscriptionCommand(interaction);
+          await responseToInteraction(interaction_token, response);
+          break;
+        case 'remove_subscriptions':
+          res.send(getAckMessage(true));
+          response = await handleRemoveSubscriptionCommand(interaction);
+          await responseToInteraction(interaction_token, response);
+          break;
         case 'subscribe':
           res.send(getAckMessage(true));
           response = await handleSubscriptionCommand(interaction);
+          await responseToInteraction(interaction_token, response);
+          break;
+        case 'unsubscribe':
+          res.send(getAckMessage(true));
+          response = await handleUnsubscribeCommand(interaction);
           await responseToInteraction(interaction_token, response);
           break;
         default:
@@ -129,6 +149,13 @@ app.post('/strava/webhook', async (req, res) => {
         const subscriptions = await SubscriptionModel.query()
           .filter('user_id', user.entityKey)
           .run();
+
+        if (subscriptions.entities.length === 0) {
+          console.log(
+            `No subscriptions found for Strava athlete id: ${athleteId}`
+          );
+          return;
+        }
         // Array to hold final webhooks data
         const webhooks = [];
 
@@ -178,11 +205,6 @@ app.post('/strava/webhook', async (req, res) => {
     }
   }
 });
-
-// on receiving a message from our webhook pub/sub
-const onPublishedMessage = (message: any) => {
-  // await postToWebhook(message);
-};
 
 app.get('/', (req, res) => {
   res.send("We're running!");

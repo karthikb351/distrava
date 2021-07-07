@@ -1,9 +1,8 @@
-import {hasPermission, parseWebhookUrl, validateWebhook} from '../lib';
 import {SubscriptionModel} from '../models/subscription';
 import {UserModel} from '../models/user';
 import {WebhookModel} from '../models/webhook';
 
-export const handleSubscriptionCommand = async (interaction: any) => {
+export const handleUnsubscribeCommand = async (interaction: any) => {
   const userId = interaction.member.user.id;
 
   let user;
@@ -14,7 +13,7 @@ export const handleSubscriptionCommand = async (interaction: any) => {
   if (!user || !user.strava_refresh_token || !user.strava_access_token) {
     return {
       content:
-        'Whoops. You need to connect your Strava account first. Use the /connect command.',
+        'Whoops. You need to connect your Strava account first. Use the `/connect` command.',
     };
   }
 
@@ -43,18 +42,20 @@ export const handleSubscriptionCommand = async (interaction: any) => {
       user_id: user.entityKey,
     });
   } catch (e) {}
-  if (existingSubscription) {
+  if (!existingSubscription) {
     return {
-      content: 'You are already subscribed.',
+      content: 'You have not subscribed to this channel.',
     };
   }
-  const subscription = new SubscriptionModel({
-    webhook_id: webhook.entityKey,
-    user_id: user.entityKey,
-  });
-  await subscription.save();
+  await SubscriptionModel.delete(
+    null,
+    null,
+    null,
+    null,
+    existingSubscription.entityKey
+  );
   return {
     content:
-      'Subscription successful! Go create an activity and you should see it show up here!',
+      'You have unsubscribed successfully! Use `/subscribe` to automatically post your activities to this channel',
   };
 };
