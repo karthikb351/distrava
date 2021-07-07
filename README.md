@@ -28,10 +28,11 @@ To deploy the app on google cloud functions, run `npm run deploy`.
 - [x] Add command `/setup_subscriptions` to connect webhooks
 - [x] Add command `/remove_subscriptions` to connect webhooks
 - [x] Limit `/setup_subscriptions` and `/remove_subscriptions` to only admins
-- [ ] Abstract class for a "command", that has ack, exec, and response functions (ref: https://refactoring.guru/design-patterns/command/typescript/example)
-- [ ] Explore Pub/Sub for handling interactions post acknowledgement
+- [x] User Pub/Sub for handling interactions post acknowledgement
+- [x] Deploy the app on Cloud Functions
+- [ ] Fix flaky deployment to cloud functions
+- [ ] Abstract class for a "command", that has ack, exec, and response functions (ref: http://refactoring.guru/design-patterns/command/typescript/example)
 - [ ] Add discord profile picture to user model
 - [ ] Setup envs and configs in Dockerfile
-- [ ] Deploy the app on Cloud Functions
 - [ ] Setup production App on Strava and Discord
 - [ ] Fix multiline logs on GCP Logger
