@@ -30,9 +30,13 @@ To deploy the app on google cloud functions, run `npm run deploy`.
 - [x] Limit `/setup_subscriptions` and `/remove_subscriptions` to only admins
 - [x] User Pub/Sub for handling interactions post acknowledgement
 - [x] Deploy the app on Cloud Functions
+- [x] Setup envs and configs in Dockerfile
 - [ ] Fix flaky deployment to cloud functions
+- [ ] Setup production App on Strava and Discord
+- [ ] Use JWT/encrypted JSON to pass state to Strava OAuth and back
+- [ ] Add interaction token to state to edit the message once the account has been connected
+- [ ] Use namespaces with datastore to seperate staging vs prod
 - [ ] Abstract class for a "command", that has ack, exec, and response functions (ref: http://refactoring.guru/design-patterns/command/typescript/example)
 - [ ] Add discord profile picture to user model
-- [ ] Setup envs and configs in Dockerfile
-- [ ] Setup production App on Strava and Discord
 - [ ] Fix multiline logs on GCP Logger
+- [ ] File issues/open PRs to fix Google's docs on Cloud Functions with Typescript

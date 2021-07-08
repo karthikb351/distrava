@@ -22,7 +22,7 @@ export const handleConnectCommand = async (interaction: any) => {
   try {
     user = await UserModel.findOne({discord_user_id: userId});
   } catch (e) {
-    console.log(e);
+    console.log('No user found, creating a new one');
   }
   if (!user) {
     user = new UserModel({
