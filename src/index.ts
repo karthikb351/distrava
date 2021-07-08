@@ -21,6 +21,7 @@ import {
   constructWebhookMessageForActivity,
   postToWebhook,
   publishInteractionMessage,
+  decryptString,
 } from './lib';
 import {SubscriptionModel} from './models/subscription';
 import {UserModel} from './models/user';
@@ -117,7 +118,23 @@ app.post('/interaction-subscription', async (req, res) => {
 
 app.get('/strava/redirect', async (req, res) => {
   const code = (req.query.code as string) || '';
-  const state = JSON.parse((req.query.state as string) || '{}');
+  let state;
+  try {
+    state = JSON.parse(decryptString(JSON.parse(req.query.state as string)));
+    const now = new Date().getTime();
+    if (now - parseInt(state.timestamp) > 5 * 60 * 1000) {
+      res.send(
+        'You took too long! Please authorize the app within 5 minutes of running the `/connect` command'
+      );
+      return;
+    }
+  } catch (e) {
+    console.log(e);
+    res.send(
+      'Looks like something went wrong. Please run the `/connect` command again'
+    );
+    return;
+  }
 
   const user = await UserModel.findOne({discord_user_id: state.user_id});
   const response: {
@@ -135,6 +152,10 @@ app.get('/strava/redirect', async (req, res) => {
   user.strava_refresh_token = response.refresh_token;
   user.strava_access_token = response.access_token;
   await user.save();
+
+  await responseToInteraction(state.interaction_token, {
+    content: 'All good! Your account is connected.',
+  });
 
   res.send('All good! Your account is connected.');
 });
