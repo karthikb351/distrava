@@ -19,7 +19,7 @@ strava.config({
 });
 
 // Creates a client
-export const datastore = new Datastore();
+export const datastore = new Datastore({namespace: config.environment});
 
 export const gstore = new Gstore();
 
