@@ -34,8 +34,8 @@ To deploy the app on google cloud functions, run `npm run deploy`.
 - [x] Fix flaky deployment to cloud functions
 - [x] Use JWT/encrypted JSON to pass state to Strava OAuth and back
 - [x] Setup production App on Strava and Discord
-- [ ] Add interaction token to state to edit the message once the account has been connected
-- [ ] Use namespaces with datastore to seperate staging vs prod
+- [x] Add interaction token to state to edit the message once the account has been connected
+- [x] Use namespaces with datastore to seperate staging vs prod
 - [ ] Abstract class for a "command", that has ack, exec, and response functions (ref: http://refactoring.guru/design-patterns/command/typescript/example)
 - [ ] Add discord profile picture to user model
 - [ ] Fix multiline logs on GCP Logger
