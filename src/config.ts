@@ -14,4 +14,5 @@ export const config = {
     interaction_topic: process.env.GOOGLE_PUBSUB_INTERACTION_TOPIC,
   },
   environment: process.env.ENVIRONMENT || 'staging',
+  signing_secret: process.env.SIGNING_SECRET,
 };

@@ -9,6 +9,8 @@ const {Gstore} = require('gstore-node');
 
 const {PubSub} = require('@google-cloud/pubsub');
 
+const crypto = require('crypto');
+
 export const strava = require('strava-v3');
 
 export const kind = 'User';
@@ -190,4 +192,33 @@ export const validateWebhook = async (
     validated = false;
   }
   return validated;
+};
+
+export const encryptString = text => {
+  const secretKey = config.signing_secret;
+  const iv = crypto.randomBytes(16);
+
+  const cipher = crypto.createCipheriv('aes-256-ctr', secretKey, iv);
+
+  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+
+  return {
+    iv: iv.toString('hex'),
+    content: encrypted.toString('hex'),
+  };
+};
+
+export const decryptString = hash => {
+  const decipher = crypto.createDecipheriv(
+    'aes-256-ctr',
+    config.signing_secret,
+    Buffer.from(hash.iv, 'hex')
+  );
+
+  const decrpyted = Buffer.concat([
+    decipher.update(Buffer.from(hash.content, 'hex')),
+    decipher.final(),
+  ]);
+
+  return decrpyted.toString();
 };
