@@ -121,6 +121,13 @@ app.get('/strava/redirect', async (req, res) => {
   let state;
   try {
     state = JSON.parse(decryptString(JSON.parse(req.query.state as string)));
+    const now = new Date().getTime();
+    if (now - parseInt(state.timestamp) > 5 * 60 * 1000) {
+      res.send(
+        'You took too long! Please authorize the app within 5 minutes of running the `/connect` command'
+      );
+      return;
+    }
   } catch (e) {
     console.log(e);
     res.send(

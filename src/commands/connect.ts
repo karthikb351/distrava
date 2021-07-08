@@ -12,6 +12,7 @@ const constructConnectURI = (
       JSON.stringify({
         user_id: discordUserId,
         interaction_token: interaction_token,
+        timestamp: new Date().getTime(),
       })
     )
   );
