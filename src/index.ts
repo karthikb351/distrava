@@ -4,13 +4,13 @@ import {
   InteractionType,
   verifyKeyMiddleware,
 } from 'discord-interactions';
+import {connectCommand} from './commands/connect';
+import {getLastActivityCommand} from './commands/get_last_activity';
+import {removeSubscriptionCommand} from './commands/remove_subscription';
+import {setupSubscriptionsCommand} from './commands/setup_subscriptions';
+import {subscribeCommand} from './commands/subscribe';
+import {unsubscribeCommand} from './commands/unsubscribe';
 const express = require('express');
-import {handleConnectCommand} from './commands/connect';
-import {handleLastActivityCommand} from './commands/get_last_activity';
-import {handleRemoveSubscriptionCommand} from './commands/remove_subscription';
-import {handleSetupSubscriptionCommand} from './commands/setup_subscriptions';
-import {handleSubscriptionCommand} from './commands/subscribe';
-import {handleUnsubscribeCommand} from './commands/unsubscribe';
 import {config} from './config';
 import {
   responseToInteraction,
@@ -29,6 +29,15 @@ import {WebhookModel} from './models/webhook';
 
 // Create an Express object and routes (in order)
 const app = express();
+
+const commands = {
+  connect: connectCommand,
+  get_last_activity: getLastActivityCommand,
+  remove_subscriptions: removeSubscriptionCommand,
+  setup_subscriptions: setupSubscriptionsCommand,
+  subscribe: subscribeCommand,
+  unsubscribe: unsubscribeCommand,
+};
 
 const getAckMessage = (ephemeral = false) => {
   return {
@@ -90,29 +99,24 @@ app.post('/interaction-subscription', async (req, res) => {
   const interaction = JSON.parse(decodedString);
   const interaction_token = interaction.token;
   let response;
-  switch (interaction.data.name) {
-    case 'connect':
-      response = await handleConnectCommand(interaction);
-      break;
-    case 'get_last_activity':
-      response = await handleLastActivityCommand(interaction);
-      break;
-    case 'setup_subscriptions':
-      response = await handleSetupSubscriptionCommand(interaction);
-      break;
-    case 'remove_subscriptions':
-      response = await handleRemoveSubscriptionCommand(interaction);
-      break;
-    case 'subscribe':
-      response = await handleSubscriptionCommand(interaction);
-      break;
-    case 'unsubscribe':
-      response = await handleUnsubscribeCommand(interaction);
-      break;
-    default:
-      await responseToInteraction(interaction_token, '?');
+  let result;
+  console.log('/interaction-subscription', interaction);
+  const command = commands[interaction.data.name];
+  if (command) {
+    result = await command.prerequisite(interaction);
+    if (result.check) {
+      response = await command.exec(interaction, result.data);
+    } else {
+      response = result.data;
+    }
+    await command.sideeffect(interaction, result.data);
+    await responseToInteraction(interaction_token, response);
+  } else {
+    await responseToInteraction(interaction_token, {
+      content: 'Whoops. Something went wrong.',
+    });
   }
-  await responseToInteraction(interaction_token, response);
+
   res.send('ok');
 });
 
