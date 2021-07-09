@@ -22,6 +22,7 @@ import {
   postToWebhook,
   publishInteractionMessage,
   decryptString,
+  getURLForUUID,
 } from './lib';
 import {SubscriptionModel} from './models/subscription';
 import {UserModel} from './models/user';
@@ -114,6 +115,16 @@ app.post('/interaction-subscription', async (req, res) => {
   }
   await responseToInteraction(interaction_token, response);
   res.send('ok');
+});
+
+app.get('/shortlink', (req, res) => {
+  try {
+    const uuid = req.query.uuid;
+    const url = getURLForUUID(uuid);
+    res.redirect(url);
+  } catch (e) {
+    res.status(404).send('This URL seems wrong.');
+  }
 });
 
 app.get('/strava/redirect', async (req, res) => {
