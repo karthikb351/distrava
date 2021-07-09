@@ -27,6 +27,6 @@ export type WebhookEmbed = {
 export type DiscordSlashCommandInteraction = any;
 export type DistravaUser = any;
 export type DiscordInteractionResponse = {
-  content: string;
+  content?: string;
   embeds?: DiscordEmbed[];
 };

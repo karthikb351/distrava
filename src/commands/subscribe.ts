@@ -71,4 +71,4 @@ class SubscribeCommand implements DistravaCommand {
   }
 }
 
-export const command = new SubscribeCommand();
+export const subscribeCommand = new SubscribeCommand();

@@ -76,4 +76,4 @@ class UnsubscribeCommand implements DistravaCommand {
   }
 }
 
-export const command = new UnsubscribeCommand();
+export const unsubscribeCommand = new UnsubscribeCommand();
