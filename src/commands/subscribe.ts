@@ -1,60 +1,74 @@
+import {DistravaCommand} from '.';
 import {hasPermission, parseWebhookUrl, validateWebhook} from '../lib';
 import {SubscriptionModel} from '../models/subscription';
 import {UserModel} from '../models/user';
 import {WebhookModel} from '../models/webhook';
+import {DiscordInteractionResponse} from '../types';
+import {doesDiscordUserExist} from '../util';
 
-export const handleSubscriptionCommand = async (interaction: any) => {
-  const userId = interaction.member.user.id;
+class SubscribeCommand implements DistravaCommand {
+  async prerequisite(interaction: any): Promise<{check: boolean; data: any}> {
+    const user = await doesDiscordUserExist(interaction.member.user.id);
 
-  let user;
-  try {
-    user = await UserModel.findOne({discord_user_id: userId});
-  } catch (e) {}
-
-  if (!user || !user.strava_refresh_token || !user.strava_access_token) {
-    return {
-      content:
-        'Whoops. You need to connect your Strava account first. Use the /connect command.',
-    };
+    if (!user || !user.strava_refresh_token || !user.strava_access_token) {
+      return {
+        check: false,
+        data: {
+          content:
+            'Whoops. You need to connect your Strava account first. Use the /connect command.',
+        },
+      };
+    } else {
+      return {
+        check: true,
+        data: user,
+      };
+    }
   }
+  async exec(interaction: any, user: any): Promise<DiscordInteractionResponse> {
+    const channelId = interaction.channel_id;
+    const guildId = interaction.guild_id;
 
-  const channelId = interaction.channel_id;
-  const guildId = interaction.guild_id;
+    let webhook;
+    try {
+      webhook = await WebhookModel.findOne({
+        discord_channel_id: channelId,
+        //   discord_guild_id: guildId,
+      });
+    } catch (e) {}
 
-  let webhook;
-  try {
-    webhook = await WebhookModel.findOne({
-      discord_channel_id: channelId,
-      //   discord_guild_id: guildId,
-    });
-  } catch (e) {}
+    if (!webhook) {
+      return {
+        content:
+          'There is no webhook configured for this channel. Try running `/setup_subscriptions`',
+      };
+    }
 
-  if (!webhook) {
-    return {
-      content:
-        'There is no webhook configured for this channel. Try running `/setup_subscriptions`',
-    };
-  }
-
-  let existingSubscription;
-  try {
-    existingSubscription = await SubscriptionModel.findOne({
+    let existingSubscription;
+    try {
+      existingSubscription = await SubscriptionModel.findOne({
+        webhook_id: webhook.entityKey,
+        user_id: user.entityKey,
+      });
+    } catch (e) {}
+    if (existingSubscription) {
+      return {
+        content: 'You are already subscribed.',
+      };
+    }
+    const subscription = new SubscriptionModel({
       webhook_id: webhook.entityKey,
       user_id: user.entityKey,
     });
-  } catch (e) {}
-  if (existingSubscription) {
+    await subscription.save();
     return {
-      content: 'You are already subscribed.',
+      content:
+        'Subscription successful! Go create an activity and you should see it show up here!',
     };
   }
-  const subscription = new SubscriptionModel({
-    webhook_id: webhook.entityKey,
-    user_id: user.entityKey,
-  });
-  await subscription.save();
-  return {
-    content:
-      'Subscription successful! Go create an activity and you should see it show up here!',
-  };
-};
+  async sideeffect(interaction: any, user: any): Promise<void> {
+    return;
+  }
+}
+
+export const command = new SubscribeCommand();

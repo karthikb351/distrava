@@ -9,8 +9,8 @@ import {handleConnectCommand} from './commands/connect';
 import {handleLastActivityCommand} from './commands/get_last_activity';
 import {handleRemoveSubscriptionCommand} from './commands/remove_subscription';
 import {handleSetupSubscriptionCommand} from './commands/setup_subscriptions';
-import {handleSubscriptionCommand} from './commands/subscribe';
-import {handleUnsubscribeCommand} from './commands/unsubscribe';
+import {command as SubscribeCommand} from './commands/subscribe';
+import {command as UnsubscribeCommand} from './commands/unsubscribe';
 import {config} from './config';
 import {
   responseToInteraction,
@@ -26,6 +26,11 @@ import {
 import {SubscriptionModel} from './models/subscription';
 import {UserModel} from './models/user';
 import {WebhookModel} from './models/webhook';
+
+const commands = {
+  subscribe: SubscribeCommand,
+  unsubscribe: UnsubscribeCommand,
+};
 
 // Create an Express object and routes (in order)
 const app = express();
@@ -90,6 +95,8 @@ app.post('/interaction-subscription', async (req, res) => {
   const interaction = JSON.parse(decodedString);
   const interaction_token = interaction.token;
   let response;
+  let result;
+  let Command;
   switch (interaction.data.name) {
     case 'connect':
       response = await handleConnectCommand(interaction);
@@ -104,10 +111,15 @@ app.post('/interaction-subscription', async (req, res) => {
       response = await handleRemoveSubscriptionCommand(interaction);
       break;
     case 'subscribe':
-      response = await handleSubscriptionCommand(interaction);
-      break;
     case 'unsubscribe':
-      response = await handleUnsubscribeCommand(interaction);
+      Command = commands[interaction.data.name];
+      result = await Command.prerequisite(interaction);
+      if (result.check) {
+        response = await Command.exec(interaction, result.data);
+      } else {
+        response = result.data;
+      }
+      await Command.sideeffect(interaction, result.data);
       break;
     default:
       await responseToInteraction(interaction_token, '?');

@@ -1,6 +1,19 @@
-export abstract class DistravaCommand {
-  abstract handleCommand(res: Express.Response, interaction: any);
-  abstract handleInteraction(interaction: any);
-  abstract acknowledgeInteraction(ephemeral: boolean);
-  abstract validateInput(interaction: any): boolean;
+import {
+  DiscordInteractionResponse,
+  DiscordSlashCommandInteraction,
+  DistravaUser,
+} from '../types';
+
+export interface DistravaCommand {
+  prerequisite(
+    interaction: DiscordSlashCommandInteraction
+  ): Promise<{check: boolean; data: DiscordInteractionResponse | DistravaUser}>;
+  exec(
+    interaction: DiscordSlashCommandInteraction,
+    user: DistravaUser
+  ): Promise<DiscordInteractionResponse>;
+  sideeffect(
+    interaction: DiscordSlashCommandInteraction,
+    user: DistravaUser
+  ): Promise<void>;
 }

@@ -36,7 +36,8 @@ To deploy the app on google cloud functions, run `npm run deploy`.
 - [x] Setup production App on Strava and Discord
 - [x] Add interaction token to state to edit the message once the account has been connected
 - [x] Use namespaces with datastore to seperate staging vs prod
-- [ ] Abstract class for a "command", that has ack, exec, and response functions (ref: http://refactoring.guru/design-patterns/command/typescript/example)
+- [**] Abstract class for a "command", that has ack, exec, and response functions (ref: http://refactoring.guru/design-patterns/command/typescript/example)
+- [ ] Add a shortner for URL so we can use Message Buttons in discord
 - [ ] Add discord profile picture to user model
 - [ ] Fix multiline logs on GCP Logger
 - [ ] File issues/open PRs to fix Google's docs on Cloud Functions with Typescript
