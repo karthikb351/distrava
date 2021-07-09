@@ -1,6 +1,7 @@
 const axios = require('axios');
 import {config} from './config';
 import {WebhookEmbed} from './types';
+import NodeCache, {default as nodeCache} from 'node-cache';
 
 // Imports the Google Cloud client library
 const {Datastore} = require('@google-cloud/datastore');
@@ -10,6 +11,10 @@ const {Gstore} = require('gstore-node');
 const {PubSub} = require('@google-cloud/pubsub');
 
 const crypto = require('crypto');
+
+const {v4: uuid} = require('uuid');
+
+const cache = new NodeCache({stdTTL: 5 * 60});
 
 export const strava = require('strava-v3');
 
@@ -221,4 +226,18 @@ export const decryptString = hash => {
   ]);
 
   return decrpyted.toString();
+};
+
+export const generateShortlinkForURL = (url: string): string => {
+  const uid = uuid();
+  cache.set(uid, {url: url});
+  return `${config.base_url}/shortlink?uuid=${uid}`;
+};
+
+export const getURLForUUID = (uuid: string): string => {
+  const data: {url: string} = cache.get(uuid);
+  if (!data) {
+    throw Error("This UUID didn't have a cache entry");
+  }
+  return data.url;
 };
