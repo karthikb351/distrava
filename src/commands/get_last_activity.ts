@@ -1,5 +1,5 @@
 import {DistravaCommand} from '.';
-import {strava} from '../lib';
+import {StravaUserClient} from '../strava';
 import {DiscordInteractionResponse} from '../types';
 import {doesDiscordUserExist} from '../util';
 
@@ -24,20 +24,14 @@ class GetLastActivityCommand implements DistravaCommand {
   }
 
   async exec(interaction: any, user: any): Promise<DiscordInteractionResponse> {
-    const stravaClient = new strava.client(user.strava_access_token);
-    const data = await stravaClient.athlete.listActivities({
-      before: Math.floor(new Date().getTime() / 1000),
-      per_page: 1,
-    });
+    const stravaClient = new StravaUserClient(user);
+    const data = await stravaClient.getLastActivity();
     if (data && data.length !== 1) {
       return {
         content: 'No recent activities to show :(',
       };
     }
-    const activity = await stravaClient.activities.get({
-      id: data[0].id,
-      include_all_efforts: false,
-    });
+    const activity = await stravaClient.getActivityById(data[0].id);
 
     return {
       embeds: [
