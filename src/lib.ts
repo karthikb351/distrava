@@ -12,14 +12,7 @@ const {PubSub} = require('@google-cloud/pubsub');
 
 const crypto = require('crypto');
 
-export const strava = require('strava-v3');
-
 export const kind = 'User';
-
-strava.config({
-  ...config.strava,
-  access_token: '',
-});
 
 // Creates a client
 export const datastore = new Datastore({namespace: config.environment});

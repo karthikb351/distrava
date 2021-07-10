@@ -14,7 +14,6 @@ const express = require('express');
 import {config} from './config';
 import {
   responseToInteraction,
-  strava,
   constructWebhookMessageForActivity,
   postToWebhook,
   publishInteractionMessage,
@@ -24,6 +23,7 @@ import {SubscriptionModel} from './models/subscription';
 import {UserModel} from './models/user';
 import {WebhookModel} from './models/webhook';
 import {logger} from './logger';
+import {StravaUserClient} from './strava';
 
 // Create an Express object and routes (in order)
 const app = express();
@@ -143,14 +143,16 @@ app.get('/strava/redirect', async (req, res) => {
     expires_in: number;
     refresh_token: string;
     access_token: string;
-  } = await strava.oauth.getToken(code);
+  } = await StravaUserClient.getToken(code);
 
-  const stravaClient = new strava.client(response.access_token);
-  const athlete = await stravaClient.athlete.get();
-  user.strava_athlete_id = athlete.id.toString();
-  user.strava_athlete_profile_picture = athlete.profile;
   user.strava_refresh_token = response.refresh_token;
   user.strava_access_token = response.access_token;
+  user.strava_access_token_expires_at = response.expires_at;
+  await user.save();
+  const stravaClient = new StravaUserClient(user);
+  const athlete = await stravaClient.getAthlete();
+  user.strava_athlete_id = athlete.id.toString();
+  user.strava_athlete_profile_picture = athlete.profile;
   await user.save();
 
   await responseToInteraction(state.interaction_token, {
@@ -184,8 +186,8 @@ app.post('/strava/webhook', async (req, res) => {
     let user;
     try {
       user = await UserModel.findOne({strava_athlete_id: athleteId});
-      const stravaClient = new strava.client(user.strava_access_token);
-      const activity = await stravaClient.activities.get({id: activityId});
+      const stravaClient = new StravaUserClient(user);
+      const activity = await stravaClient.getActivityById(activityId);
       try {
         // List of subscriptions for a given user
         const subscriptions = await SubscriptionModel.query()
