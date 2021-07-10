@@ -18,6 +18,11 @@ const userSchema = new Schema({
     optional: true,
     excludeFromIndexes: true,
   },
+  strava_access_token_expires_at: {
+    type: Number,
+    optional: true,
+    excludeFromIndexes: true,
+  },
   strava_access_token: {type: String, optional: true, excludeFromIndexes: true},
   strava_refresh_token: {
     type: String,
