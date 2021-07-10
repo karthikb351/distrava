@@ -100,7 +100,6 @@ app.post('/interaction-subscription', async (req, res) => {
   const interaction_token = interaction.token;
   let response;
   let result;
-  console.log('/interaction-subscription', interaction);
   const command = commands[interaction.data.name];
   if (command) {
     result = await command.prerequisite(interaction);
