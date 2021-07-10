@@ -1,3 +1,5 @@
+/* eslint-disable node/no-unpublished-require */
+/* eslint-disable no-console */
 const {Client} = require('discord-slash-commands-client');
 // TypeScript: import { Client } from "discord-slash-commands-client";
 

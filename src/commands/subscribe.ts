@@ -1,7 +1,6 @@
 import {DistravaCommand} from '.';
-import {hasPermission, parseWebhookUrl, validateWebhook} from '../lib';
+import {logger} from '../logger';
 import {SubscriptionModel} from '../models/subscription';
-import {UserModel} from '../models/user';
 import {WebhookModel} from '../models/webhook';
 import {DiscordInteractionResponse} from '../types';
 import {doesDiscordUserExist} from '../util';
@@ -27,7 +26,6 @@ class SubscribeCommand implements DistravaCommand {
   }
   async exec(interaction: any, user: any): Promise<DiscordInteractionResponse> {
     const channelId = interaction.channel_id;
-    const guildId = interaction.guild_id;
 
     let webhook;
     try {
@@ -35,7 +33,9 @@ class SubscribeCommand implements DistravaCommand {
         discord_channel_id: channelId,
         //   discord_guild_id: guildId,
       });
-    } catch (e) {}
+    } catch (e) {
+      logger.error(e);
+    }
 
     if (!webhook) {
       return {
@@ -50,7 +50,9 @@ class SubscribeCommand implements DistravaCommand {
         webhook_id: webhook.entityKey,
         user_id: user.entityKey,
       });
-    } catch (e) {}
+    } catch (e) {
+      logger.error(e);
+    }
     if (existingSubscription) {
       return {
         content: 'You are already subscribed.',

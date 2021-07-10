@@ -3,6 +3,7 @@ import {config} from '../config';
 import {encryptString} from '../lib';
 import {UserModel} from '../models/user';
 import {DiscordInteractionResponse} from '../types';
+import {logger} from '../logger';
 
 class ConnectCommand implements DistravaCommand {
   static constructConnectURI = (
@@ -26,7 +27,7 @@ class ConnectCommand implements DistravaCommand {
     try {
       user = await UserModel.findOne({discord_user_id: userId});
     } catch (e) {
-      console.log('No user found, creating a new one');
+      logger.info('No user found, creating a new one');
     }
     if (!user) {
       user = new UserModel({
