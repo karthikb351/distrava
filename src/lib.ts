@@ -1,6 +1,7 @@
 const axios = require('axios');
 import {config} from './config';
 import {WebhookEmbed} from './types';
+import {logger} from './logger';
 
 // Imports the Google Cloud client library
 const {Datastore} = require('@google-cloud/datastore');
@@ -188,7 +189,7 @@ export const validateWebhook = async (
     );
     validated = true;
   } catch (e) {
-    console.log(e);
+    logger.log(e);
     validated = false;
   }
   return validated;

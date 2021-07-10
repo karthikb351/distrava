@@ -3,6 +3,7 @@ import {SubscriptionModel} from '../models/subscription';
 import {UserModel} from '../models/user';
 import {WebhookModel} from '../models/webhook';
 import {DiscordSlashCommandInteraction, DistravaUser} from '../types';
+import {logger} from '../logger';
 
 class UnsubscribeCommand implements DistravaCommand {
   async prerequisite(interaction: DiscordSlashCommandInteraction) {
@@ -11,7 +12,9 @@ class UnsubscribeCommand implements DistravaCommand {
     let user;
     try {
       user = await UserModel.findOne({discord_user_id: userId});
-    } catch (e) {}
+    } catch (e) {
+      logger.log(e);
+    }
 
     if (!user || !user.strava_refresh_token || !user.strava_access_token) {
       return {
@@ -30,7 +33,6 @@ class UnsubscribeCommand implements DistravaCommand {
   }
   async exec(interaction: DiscordSlashCommandInteraction, user: DistravaUser) {
     const channelId = interaction.channel_id;
-    const guildId = interaction.guild_id;
 
     let webhook;
     try {
@@ -38,7 +40,9 @@ class UnsubscribeCommand implements DistravaCommand {
         discord_channel_id: channelId,
         //   discord_guild_id: guildId,
       });
-    } catch (e) {}
+    } catch (e) {
+      logger.log(e);
+    }
 
     if (!webhook) {
       return {
@@ -53,7 +57,9 @@ class UnsubscribeCommand implements DistravaCommand {
         webhook_id: webhook.entityKey,
         user_id: user.entityKey,
       });
-    } catch (e) {}
+    } catch (e) {
+      logger.log(e);
+    }
     if (!existingSubscription) {
       return {
         content: 'You have not subscribed to this channel.',

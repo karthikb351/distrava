@@ -3,6 +3,7 @@ import {hasPermission} from '../lib';
 import {SubscriptionModel} from '../models/subscription';
 import {WebhookModel} from '../models/webhook';
 import {DiscordInteractionResponse} from '../types';
+import {logger} from '../logger';
 
 class RemoveSubscriptionCommand implements DistravaCommand {
   async prerequisite(interaction: any): Promise<{check: boolean; data: any}> {
@@ -28,14 +29,15 @@ class RemoveSubscriptionCommand implements DistravaCommand {
   }
   async exec(interaction: any, user: any): Promise<DiscordInteractionResponse> {
     const channelId = interaction.channel_id;
-    const guildId = interaction.guild_id;
     let webhook;
     try {
       webhook = await WebhookModel.findOne({
         discord_channel_id: channelId,
         //   discord_guild_id: guildId,
       });
-    } catch (e) {}
+    } catch (e) {
+      logger.log(e);
+    }
     if (!webhook) {
       return {
         content:

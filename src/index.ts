@@ -15,9 +15,6 @@ import {config} from './config';
 import {
   responseToInteraction,
   strava,
-  datastore,
-  kind,
-  gstore,
   constructWebhookMessageForActivity,
   postToWebhook,
   publishInteractionMessage,
@@ -26,6 +23,7 @@ import {
 import {SubscriptionModel} from './models/subscription';
 import {UserModel} from './models/user';
 import {WebhookModel} from './models/webhook';
+import {logger} from './logger';
 
 // Create an Express object and routes (in order)
 const app = express();
@@ -54,7 +52,6 @@ app.post(
   verifyKeyMiddleware(config.discord.public_key),
   async (req, res) => {
     const interaction = req.body;
-    let response;
 
     if (
       interaction &&
@@ -132,7 +129,7 @@ app.get('/strava/redirect', async (req, res) => {
       return;
     }
   } catch (e) {
-    console.log(e);
+    logger.log(e);
     res.send(
       'Looks like something went wrong. Please run the `/connect` command again'
     );
@@ -196,7 +193,7 @@ app.post('/strava/webhook', async (req, res) => {
           .run();
 
         if (subscriptions.entities.length === 0) {
-          console.log(
+          logger.log(
             `No subscriptions found for Strava athlete id: ${athleteId}`
           );
           return;
@@ -233,19 +230,19 @@ app.post('/strava/webhook', async (req, res) => {
             );
             // Push to pub/sub queue
           } catch (e) {
-            console.log(e);
+            logger.log(e);
           }
         });
         await Promise.all(webhookPromises);
       } catch (e) {
-        console.log(e);
+        logger.log(e);
       }
       // Lookup datastore via strava athlete ID
       // Lookup which channel to post for that athlete
       // Find all webhooks to post to for this athlete, and push them to pub/sub
       // end
     } catch (e) {
-      console.log(e);
+      logger.log(e);
       return;
     }
   }

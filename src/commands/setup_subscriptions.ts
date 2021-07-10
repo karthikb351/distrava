@@ -2,6 +2,7 @@ import {DistravaCommand} from '.';
 import {hasPermission, parseWebhookUrl, validateWebhook} from '../lib';
 import {WebhookModel} from '../models/webhook';
 import {DiscordInteractionResponse} from '../types';
+import {logger} from '../logger';
 
 class SetupSubscriptionsCommand implements DistravaCommand {
   async prerequisite(interaction: any): Promise<{check: boolean; data: any}> {
@@ -54,7 +55,9 @@ class SetupSubscriptionsCommand implements DistravaCommand {
         discord_channel_id: channelId,
         //   discord_guild_id: guildId,
       });
-    } catch (e) {}
+    } catch (e) {
+      logger.log(e);
+    }
     if (!webhook) {
       webhook = new WebhookModel({
         discord_channel_id: channelId,
@@ -66,7 +69,7 @@ class SetupSubscriptionsCommand implements DistravaCommand {
       // If there is an existing webhook, we update the webhook configuration
       webhook.discord_webhook_id = _webhook.webhook_id;
       webhook.discord_webhook_token = _webhook.webhook_token;
-      console.log('Existing webhook found, updating to new URL');
+      logger.log('Existing webhook found, updating to new URL');
     }
 
     webhook = await webhook.save();
