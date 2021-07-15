@@ -179,7 +179,7 @@ app.get('/strava/webhook', async (req, res) => {
 app.post('/strava/webhook', async (req, res) => {
   const data = req.body;
   res.send();
-  if (data.object_type === 'activity' && data.aspect_type !== 'delete') {
+  if (data.object_type === 'activity' && data.aspect_type === 'create') {
     const athleteId = data.owner_id.toString();
     const activityId = data.object_id;
 
