@@ -20,12 +20,13 @@ export class StravaUserClient {
       this.user.strava_access_token_expires_at &&
       this.user.strava_access_token_expires_at < new Date().getTime() / 1000
     ) {
-      const response = await this.client.oauth.refreshToken(
+      const response = await strava.oauth.refreshToken(
         this.user.strava_refresh_token
       );
       this.user.strava_refresh_token = response.refresh_token;
       this.user.strava_access_token = response.access_token;
       this.user.strava_access_token_expires_at = response.expires_at;
+      this.client = new strava.client(response.access_token);
       await this.user.save();
     }
   }
