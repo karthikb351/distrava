@@ -95,9 +95,9 @@ export const constructWebhookMessageForActivity = (
     ],
   };
 
-  if (activity?.map?.polyline) {
+  if (activity?.map?.summary_polyline) {
     result.embeds[0].image = {
-      url: getMapImageForPolyline(activity.map.polyline),
+      url: getMapImageForPolyline(activity.map.summary_polyline),
     };
   }
   const fields: WebhookEmbed['embeds'][0]['fields'] = [];
