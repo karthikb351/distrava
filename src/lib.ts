@@ -1,6 +1,6 @@
 const axios = require('axios');
 import {config} from './config';
-import {WebhookEmbed} from './types';
+import {DiscordEmbed, WebhookEmbed} from './types';
 import {logger} from './logger';
 
 // Imports the Google Cloud client library
@@ -73,30 +73,21 @@ export const getMapImageForPolyline = (encodedPolyline: string) => {
   }`;
 };
 
-export const constructWebhookMessageForActivity = (
-  user: any,
-  activity: any
-) => {
-  const result: WebhookEmbed = {
-    username: user.discord_username,
-    avatar_url: user.strava_athlete_profile_picture,
-    embeds: [
-      {
-        title: activity.name,
-        url: `https://www.strava.com/activities/${activity.id}`,
-        description: activity.description,
-        color: 12221789,
-        timestamp: activity.start_date_local,
-        author: {
-          name: user.discord_username,
-          icon_url: user.strava_athlete_profile_picture,
-        },
-      },
-    ],
+export const getDiscordEmbedForActivity = (user: any, activity: any) => {
+  const embed: DiscordEmbed = {
+    title: activity.name,
+    url: `https://www.strava.com/activities/${activity.id}`,
+    description: activity.description,
+    color: 12221789,
+    timestamp: activity.start_date_local,
+    author: {
+      name: user.discord_username,
+      icon_url: user.strava_athlete_profile_picture,
+    },
   };
 
   if (activity?.map?.summary_polyline) {
-    result.embeds[0].image = {
+    embed.image = {
       url: getMapImageForPolyline(activity.map.summary_polyline),
     };
   }
@@ -112,9 +103,12 @@ export const constructWebhookMessageForActivity = (
   if (activity?.moving_time) {
     fields.push({
       name: 'Moving Time(mins)',
-      value: `${Math.floor(activity.moving_time / 60)}:${
+      value: `${Math.floor(activity.moving_time / 60)}:${(
         activity.moving_time % 60
-      }`,
+      ).toLocaleString('en-US', {
+        minimumIntegerDigits: 2, // make sure minutes always show as two digits
+        useGrouping: false,
+      })}`,
       inline: true,
     });
   }
@@ -126,8 +120,20 @@ export const constructWebhookMessageForActivity = (
     });
   }
   if (fields.length > 0) {
-    result.embeds[0].fields = fields;
+    embed.fields = fields;
   }
+  return embed;
+};
+
+export const constructWebhookMessageForActivity = (
+  user: any,
+  activity: any
+) => {
+  const result: WebhookEmbed = {
+    username: user.discord_username,
+    avatar_url: user.strava_athlete_profile_picture,
+    embeds: [getDiscordEmbedForActivity(user, activity)],
+  };
   return result;
 };
 

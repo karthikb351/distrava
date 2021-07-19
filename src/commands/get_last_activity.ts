@@ -1,4 +1,5 @@
 import {DistravaCommand} from '.';
+import {getDiscordEmbedForActivity} from '../lib';
 import {StravaUserClient} from '../strava';
 import {DiscordInteractionResponse} from '../types';
 import {doesDiscordUserExist} from '../util';
@@ -34,19 +35,7 @@ class GetLastActivityCommand implements DistravaCommand {
     const activity = await stravaClient.getActivityById(data[0].id);
 
     return {
-      embeds: [
-        {
-          title: activity.name,
-          description: activity.description,
-          url: `https://www.strava.com/activities/${activity.id}`,
-          color: 12221789,
-          timestamp: activity.start_date_local,
-          author: {
-            name: user.discord_username,
-            icon_url: user.strava_athlete_profile_picture,
-          },
-        },
-      ],
+      embeds: [getDiscordEmbedForActivity(user, activity)],
     };
   }
   async sideeffect(interaction: any, user: any): Promise<void> {
