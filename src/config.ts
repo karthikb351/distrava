@@ -10,8 +10,11 @@ export const config = {
     bot_token: process.env.DISCORD_BOT_TOKEN,
   },
   google: {
-    google_maps_static_api_key: process.env.GOOGLE_MAPS_STATIC_API_KEY,
     interaction_topic: process.env.GOOGLE_PUBSUB_INTERACTION_TOPIC,
+  },
+  mapbox: {
+    mapbox_static_maps_access_token:
+      process.env.MAPBOX_STATIC_MAPS_ACCESS_TOKEN,
   },
   environment: process.env.ENVIRONMENT || 'staging',
   signing_secret: process.env.SIGNING_SECRET,
