@@ -65,8 +65,12 @@ export const postToWebhook = (
   );
 };
 
-export const getGoogleStaticMapForPolyline = (encodedPolyline: string) => {
-  return `https://maps.googleapis.com/maps/api/staticmap?size=400x400&path=weight:5%7Ccolor:0x0000ff80%7Cenc:${encodedPolyline}&key=${config.google.google_maps_static_api_key}`;
+export const getMapImageForPolyline = (encodedPolyline: string) => {
+  return `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/path-5+f44-0.7(${encodeURIComponent(
+    encodedPolyline
+  )})/auto/500x500?access_token=${
+    config.mapbox.mapbox_static_maps_access_token
+  }`;
 };
 
 export const constructWebhookMessageForActivity = (
@@ -93,7 +97,7 @@ export const constructWebhookMessageForActivity = (
 
   if (activity?.map?.polyline) {
     result.embeds[0].image = {
-      url: getGoogleStaticMapForPolyline(activity.map.polyline),
+      url: getMapImageForPolyline(activity.map.polyline),
     };
   }
   const fields: WebhookEmbed['embeds'][0]['fields'] = [];
