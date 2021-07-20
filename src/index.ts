@@ -177,9 +177,26 @@ app.get('/strava/webhook', async (req, res) => {
 });
 
 app.post('/strava/webhook', async (req, res) => {
-  logger.info(req.rawHeaders);
+  logger.info(
+    `Finagle-Ctx-Com.twitter.finagle.deadline: ${req.header(
+      'Finagle-Ctx-Com.twitter.finagle.deadline'
+    )}`
+  );
+
+  // Strava uses twitter's finangle for its webhook processing, and we can access the acknowledge timeout here - https://twitter.github.io/finagle/guide/Protocols.html#http
+  const ackTimeoutMs = req
+    .header('Finagle-Ctx-Com.twitter.finagle.deadline')
+    .split(' ')?.[1];
+
+  // If we aren't 1s within the timeout window, we should reject and allow strava to retry us.
+  if (new Date(parseInt(ackTimeoutMs) / (1000 * 1000) - 1000) > new Date()) {
+    res.status(500).send();
+    return;
+  }
+
   const data = req.body;
   res.send();
+
   if (data.object_type === 'activity' && data.aspect_type === 'create') {
     const athleteId = data.owner_id.toString();
     const activityId = data.object_id;
