@@ -10,7 +10,7 @@ import {removeSubscriptionCommand} from './commands/remove_subscription';
 import {setupSubscriptionsCommand} from './commands/setup_subscriptions';
 import {subscribeCommand} from './commands/subscribe';
 import {unsubscribeCommand} from './commands/unsubscribe';
-const express = require('express');
+import express from 'express';
 import {config} from './config';
 import {
   responseToInteraction,
@@ -177,6 +177,7 @@ app.get('/strava/webhook', async (req, res) => {
 });
 
 app.post('/strava/webhook', async (req, res) => {
+  logger.info(req.rawHeaders);
   const data = req.body;
   res.send();
   if (data.object_type === 'activity' && data.aspect_type === 'create') {
