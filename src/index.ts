@@ -183,19 +183,41 @@ app.post('/strava/webhook', async (req, res) => {
     )}`
   );
 
+  logger.info(
+    `Finagle-Ctx-Com.twitter.finagle.retries: ${req.header(
+      'Finagle-Ctx-Com.twitter.finagle.retries'
+    )}`
+  );
+
+  const ackRetries = req.header('Finagle-Ctx-Com.twitter.finagle.retries');
+
   // Strava uses twitter's finangle for its webhook processing, and we can access the acknowledge timeout here - https://twitter.github.io/finagle/guide/Protocols.html#http
   const ackTimeoutNs = req
     .header('Finagle-Ctx-Com.twitter.finagle.deadline')
     .split(' ')?.[1];
 
+  const ackTimeoutMs = Math.floor(parseInt(ackTimeoutNs) / (1000 * 1000));
+
   // Set timeout headroom to 1s
-  const ackTimeoutDate = new Date(
-    parseInt(ackTimeoutNs) / (1000 * 1000 - 1000)
+  const aggressiveAckTimeoutDate = new Date(ackTimeoutMs - 1000);
+
+  logger.info(
+    `Time (ms) between current time and deadline: ${
+      new Date().getTime() - ackTimeoutMs
+    }`
+  );
+
+  logger.info(
+    `Time (ms) between current time and aggressive deadline: ${
+      new Date().getTime() - aggressiveAckTimeoutDate.getTime()
+    }`
   );
 
   // If we aren't within the timeout window we should reject and allow Strava to retry us.
-  if (ackTimeoutDate > new Date()) {
-    logger.info(`Cannot meet deadline of ${ackTimeoutDate.toISOString()}`);
+  if (aggressiveAckTimeoutDate > new Date() && parseInt(ackRetries) < 2) {
+    logger.info(
+      `Cannot meet aggressive deadline of ${aggressiveAckTimeoutDate.toISOString()}. Retry count: ${ackRetries}`
+    );
     res.status(500).send();
     return;
   }
