@@ -198,8 +198,8 @@ app.post('/strava/webhook', async (req, res) => {
 
   const ackTimeoutMs = Math.floor(parseInt(ackTimeoutNs) / (1000 * 1000));
 
-  // Set timeout headroom to 1s
-  const aggressiveAckTimeoutDate = new Date(ackTimeoutMs - 1000);
+  // Set timeout headroom to 500ms
+  const aggressiveAckTimeoutDate = new Date(ackTimeoutMs - 500);
 
   logger.info(
     `Time (ms) between current time and deadline: ${
@@ -214,7 +214,7 @@ app.post('/strava/webhook', async (req, res) => {
   );
 
   // If we aren't within the timeout window we should reject and allow Strava to retry us.
-  if (aggressiveAckTimeoutDate > new Date() && parseInt(ackRetries) < 2) {
+  if (aggressiveAckTimeoutDate < new Date() && parseInt(ackRetries) < 2) {
     logger.info(
       `Cannot meet aggressive deadline of ${aggressiveAckTimeoutDate.toISOString()}. Retry count: ${ackRetries}`
     );
