@@ -18,6 +18,7 @@ import {
   postToWebhook,
   publishInteractionMessage,
   decryptString,
+  publishStravaWebhookMessage,
 } from './lib';
 import {SubscriptionModel} from './models/subscription';
 import {UserModel} from './models/user';
@@ -223,77 +224,88 @@ app.post('/strava/webhook', async (req, res) => {
   }
 
   const data = req.body;
-  res.send();
 
+  // Push to GCP's Pub/Sub
   if (data.object_type === 'activity' && data.aspect_type === 'create') {
-    const athleteId = data.owner_id.toString();
-    const activityId = data.object_id;
+    await publishStravaWebhookMessage(data);
+  }
 
-    let user;
+  res.send();
+});
+
+app.post('/strava-webhook-subscription', async (req, res) => {
+  const base64 = req.body.message.data;
+  const decodedString = Buffer.from(base64, 'base64').toString();
+  const data = JSON.parse(decodedString);
+  const athleteId = data.owner_id.toString();
+  const activityId = data.object_id;
+
+  let user;
+  try {
+    user = await UserModel.findOne({strava_athlete_id: athleteId});
+    const stravaClient = new StravaUserClient(user);
+    const activity = await stravaClient.getActivityById(activityId);
     try {
-      user = await UserModel.findOne({strava_athlete_id: athleteId});
-      const stravaClient = new StravaUserClient(user);
-      const activity = await stravaClient.getActivityById(activityId);
-      try {
-        // List of subscriptions for a given user
-        const subscriptions = await SubscriptionModel.query()
-          .filter('user_id', user.entityKey)
-          .run();
+      // List of subscriptions for a given user
+      const subscriptions = await SubscriptionModel.query()
+        .filter('user_id', user.entityKey)
+        .run();
 
-        if (subscriptions.entities.length === 0) {
-          logger.info(
-            `No subscriptions found for Strava athlete id: ${athleteId}`
-          );
-          return;
-        }
-        // Array to hold final webhooks data
-        const webhooks = [];
-
-        // Promise array for finding webhooks for a given subscription
-        const webhookQueryPromises = [];
-        subscriptions.entities.forEach(subscription => {
-          webhookQueryPromises.push(
-            WebhookModel.findOne({
-              __key__: subscription.webhook_id,
-            })
-          );
-        });
-        await Promise.all(webhookQueryPromises).then(_arr =>
-          _arr.forEach(val => webhooks.push(val))
+      if (subscriptions.entities.length === 0) {
+        logger.info(
+          `No subscriptions found for Strava athlete id: ${athleteId}`
         );
-
-        const webhookPromises = [];
-        webhooks.forEach(webhook => {
-          try {
-            const webhookMessage = constructWebhookMessageForActivity(
-              user,
-              activity
-            );
-            webhookPromises.push(
-              postToWebhook(
-                webhook.discord_webhook_id,
-                webhook.discord_webhook_token,
-                webhookMessage
-              )
-            );
-            // Push to pub/sub queue
-          } catch (e) {
-            logger.error(e);
-          }
-        });
-        await Promise.all(webhookPromises);
-      } catch (e) {
-        logger.error(e);
+        return;
       }
-      // Lookup datastore via strava athlete ID
-      // Lookup which channel to post for that athlete
-      // Find all webhooks to post to for this athlete, and push them to pub/sub
-      // end
+      // Array to hold final webhooks data
+      const webhooks = [];
+
+      // Promise array for finding webhooks for a given subscription
+      const webhookQueryPromises = [];
+      subscriptions.entities.forEach(subscription => {
+        webhookQueryPromises.push(
+          WebhookModel.findOne({
+            __key__: subscription.webhook_id,
+          })
+        );
+      });
+      await Promise.all(webhookQueryPromises).then(_arr =>
+        _arr.forEach(val => webhooks.push(val))
+      );
+
+      const webhookPromises = [];
+      webhooks.forEach(webhook => {
+        try {
+          const webhookMessage = constructWebhookMessageForActivity(
+            user,
+            activity
+          );
+          webhookPromises.push(
+            postToWebhook(
+              webhook.discord_webhook_id,
+              webhook.discord_webhook_token,
+              webhookMessage
+            )
+          );
+          // Push to pub/sub queue
+        } catch (e) {
+          logger.error(e);
+        }
+      });
+      await Promise.all(webhookPromises);
     } catch (e) {
       logger.error(e);
-      return;
     }
+    // Lookup datastore via strava athlete ID
+    // Lookup which channel to post for that athlete
+    // Find all webhooks to post to for this athlete, and push them to pub/sub
+    // end
+  } catch (e) {
+    logger.error(e);
+    return;
   }
+
+  res.send('ok');
 });
 
 app.get('/', (req, res) => {

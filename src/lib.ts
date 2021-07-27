@@ -29,6 +29,14 @@ export const publishInteractionMessage = (interaction: any) => {
     .publish(dataBuffer);
 };
 
+export const publishStravaWebhookMessage = (data: any) => {
+  // Publishes the message as a string, e.g. "Hello, world!" or JSON.stringify(someObject)
+  const dataBuffer = Buffer.from(JSON.stringify(data));
+  return pubSubClient
+    .topic(config.google.strava_webhook_topic)
+    .publish(dataBuffer);
+};
+
 gstore.connect(datastore);
 
 export const responseToInteraction = (
