@@ -11,6 +11,7 @@ export const config = {
   },
   google: {
     interaction_topic: process.env.GOOGLE_PUBSUB_INTERACTION_TOPIC,
+    strava_webhook_topic: process.env.GOOGLE_PUBSUB_STRAVA_WEBHOOK_TOPIC,
   },
   mapbox: {
     mapbox_static_maps_access_token:
