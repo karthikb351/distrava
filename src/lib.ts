@@ -19,22 +19,26 @@ export const datastore = new Datastore({namespace: config.environment});
 
 export const gstore = new Gstore();
 
-export const pubSubClient = new PubSub();
+const pubSubClient = new PubSub();
+
+const interactionPubSubClient = pubSubClient.topic(
+  config.google.interaction_topic
+);
+
+const stravaWebhookPubSubClient = pubSubClient.topic(
+  config.google.strava_webhook_topic
+);
 
 export const publishInteractionMessage = (interaction: any) => {
   // Publishes the message as a string, e.g. "Hello, world!" or JSON.stringify(someObject)
   const dataBuffer = Buffer.from(JSON.stringify(interaction));
-  return pubSubClient
-    .topic(config.google.interaction_topic)
-    .publish(dataBuffer);
+  return interactionPubSubClient.publish(dataBuffer);
 };
 
 export const publishStravaWebhookMessage = (data: any) => {
   // Publishes the message as a string, e.g. "Hello, world!" or JSON.stringify(someObject)
   const dataBuffer = Buffer.from(JSON.stringify(data));
-  return pubSubClient
-    .topic(config.google.strava_webhook_topic)
-    .publish(dataBuffer);
+  return stravaWebhookPubSubClient.publish(dataBuffer);
 };
 
 gstore.connect(datastore);
