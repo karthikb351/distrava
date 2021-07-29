@@ -225,12 +225,21 @@ app.post('/strava/webhook', async (req, res) => {
 
   const data = req.body;
 
+  res.send();
   // Push to GCP's Pub/Sub
   if (data.object_type === 'activity' && data.aspect_type === 'create') {
+    logger.info(
+      `Publishing activity: '${data.object_id}' for athlete: '${data.owner_id}'`
+    );
     await publishStravaWebhookMessage(data);
+    logger.info(
+      `Successefully published activity: ';${data.object_id}' for athlete: '${data.owner_id}'`
+    );
+  } else {
+    logger.info(
+      `Ignoring. Object type is '${data.object_type}' and aspect type is '${data.aspect_type}'`
+    );
   }
-
-  res.send();
 });
 
 app.post('/strava-webhook-subscription', async (req, res) => {
