@@ -91,7 +91,7 @@ export const getDiscordEmbedForActivity = (user: any, activity: any) => {
     url: `https://www.strava.com/activities/${activity.id}`,
     description: activity.description,
     color: 12221789,
-    timestamp: activity.start_date_local,
+    timestamp: activity.start_date,
     author: {
       name: user.discord_username,
       icon_url: user.strava_athlete_profile_picture,
