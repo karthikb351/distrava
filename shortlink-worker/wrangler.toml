@@ -1,0 +1,17 @@
+type = "javascript"
+account_id = "43491473cc56d7e1ce9f8fdb6ad0c071"
+workers_dev = false
+zone_id = "f5cc173d90df4dc7aaac5c82f0955394"
+
+
+[build.upload]
+dir = "src"
+format = "modules"
+main = "./index.mjs"
+
+[env.production]
+name = "shortlink-worker"
+routes = ["https://api.karthikbalakrishnan.com/shortlink/*"]
+
+[durable_objects]
+bindings = [{name = "SHORTLINK", class_name = "ShortLink"}]
